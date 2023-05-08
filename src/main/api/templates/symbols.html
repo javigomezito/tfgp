@@ -1,0 +1,881 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript" src="{{url_for('static', filename='js/Symbols.js')}}"></script>
+<script type="text/javascript">
+
+  var dataDictionary = JSON.parse('{{ dataDictionary2 | safe}}');
+  var paginationValidated = parseInt('{{ validated_pagination }}');
+  var paginationNonValidated = parseInt('{{ nonvalidated_pagination }}');
+  var searchedText = '{{ searchedText }}';
+  var numberOfPages = 4;
+  var is_FilteredValidated=false;
+  var is_FilteredNonValidated=false;
+</script>
+
+<!--Error alert-->
+<div id="errorAlert"></div>
+<!--Success alert-->
+<div id="successAlert"></div>
+<h1>SYMBOLS</h1>
+<h2 id="searchedTextSpan"></h2>
+<script>
+  if(searchedText!=''){
+    if(searchedText.length<30){
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText;
+    }else{
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText.substring(0, 30)+'...';
+    }
+  }
+</script>
+<ul class="nav nav-tabs">
+  <li class="nav-item" id="symbolsvalidatedTabI">
+    <a id="symbolsvalidatedTab" class="nav-link active" data-toggle="tab"
+      href="#symbolsvalidatedTabContent">Validated</a>
+  </li>
+  <li class="nav-item" id="symbolspendingTabI">
+    <a id="symbolspendingTab" class="nav-link" data-toggle="tab" href="#symbolspendingTabContent">Pending</a>
+  </li>
+  <div class="ml-auto p-1 bd-highlight">
+    <button class="btn btn-success btn-sm" id="addNewSymbolButton" data-toggle="modal" data-target="#addNewSymbolCard" onclick="modalAdd()">Add symbol</button>
+  </div>
+</ul>
+
+<div id="myTabContent" class="tab-content pt-4">
+  <div class="tab-pane fade show active" id="symbolsvalidatedTabContent">
+    <!-- Validated -->
+    <div class="d-flex bd-highlight">
+      <div class="ml-auto p-1 bd-highlight">
+        <ul class="pagination pagination-sm mb-1" id="currentPaginationValidated">
+          
+          <li class="page-item" id="firstPaginationValidated">
+            <a class="page-link border border-secondary" href="#">&laquo;</a>
+          </li>
+          <li class="page-item" id="previousPaginationValidated">
+            <a class="page-link border border-secondary" href="#">Previous</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationValidated" title="" onclick="removeFade('lesserPaginationValidated', true)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item active" id="activePaginationValidated" value=1>
+            <a class="page-link border border-secondary" href="#">1</a>
+          </li>
+
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationValidated" title="" onclick="removeFade('greaterPaginationValidated', true)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item" id="nextPaginationValidated">
+            <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+          </li>
+          <li class="page-item" id="lastPaginationValidated">
+            <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top" title="Last page">&raquo;</a>
+          </li>
+        </ul>
+        <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span id="pageNumberValidated">0</span></small>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive" id="validatedTable">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Symbol name</th>
+            <th scope="col">
+              <select class="custom-select text-primary" id="inputFilterMainModuleValidated" onchange="filterValidated()">
+                <option value="Main module" selected>Main module</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputFilterMainModuleValidated");
+                  for (var i = 0; i < dataDictionary.modules.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.modules[i].name;
+                    option.text = dataDictionary.modules[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+            </th>
+            <th scope="col">
+              <select class="custom-select text-primary" id="inputFilterCategoryValidated" onchange="filterValidated()">
+                <option value="Category" selected>Category</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputFilterCategoryValidated");
+                  for (var i = 0; i < dataDictionary.categories.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.categories[i].name;
+                    option.text = dataDictionary.categories[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+            </th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="symbolsValidTableBody" id="symbolsValidTableBody">
+          
+          <script type="text/javascript">
+            var validSymbols = dataDictionary.symbols.validated;
+            for (index = 0; index < validSymbols.length; index++) {
+
+              item = '<tr class="accordion-toggle collapsed" id="'+ validSymbols[index].name +'Accordion" data-toggle="collapse" data-parent="#'+ validSymbols[index].name +'Accordion" href="#collapse'+index+'">'+
+                '<td class="expand-button">></td>' +
+                '<td id="'+ validSymbols[index].name +'">'+ validSymbols[index].name +'</td>' +
+                '<td id="'+ validSymbols[index].name +'Module">'+ validSymbols[index].modules.main +'</td>' +
+                '<td id="'+ validSymbols[index].name +'Category">'+ validSymbols[index].category +'</td>'+
+                '<td><button id="modifyButton" href="" onclick="modalModify(this)" value="'+validSymbols[index].name+'" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifySymbolCard">Modify</button>'+
+                '<button id="deleteButton" href="" onclick="modalDelete(this)" value="'+validSymbols[index].name+'" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteSymbolCard">Delete</button>'+
+                '</td></tr>'+
+                '<tr class="hide-table-padding">'+ 
+                '<td></td>'+
+                '<td colspan="4">'+
+                  '<div id="collapse'+index+'" class="collapse in p-3">'+
+                    '<div class="row">'+
+                      '<div class="col-5">Definition</div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'Definition">'+validSymbols[index].definition+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Unit</div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'Unit">'+validSymbols[index].unit+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5"><button id="'+ validSymbols[index].name +'IsIndexedLink" href="" onclick="modalModifyIndexes(this)" value="'+validSymbols[index].name+'" class="btn btn-outline text-info p-0 symbolLinks" data-toggle="modal" data-target="#modifySymbolIndexesCard">Is_indexed</button></div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'Is_indexed">'+validSymbols[index].is_indexed+'</div>'+ 
+                      //iba aqui el scrip de los indices
+                    '</div>'+
+                    '<div class="row" id="'+ validSymbols[index].name +'IndexesDiv">'+
+                      '<div class="col-5"><button id="'+ validSymbols[index].name +'IndexesLink" href="" onclick="modalModifyIndexes(this)" value="'+validSymbols[index].name+'" class="btn btn-outline text-info p-0 symbolLinks" data-toggle="modal" data-target="#modifySymbolIndexesCard">Indexes</button></div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'Indexes" class="symbolIndexes'+index+'"></div>'+ 
+                      //iba aqui el scrip de los indices
+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Main module</div>'+
+                      '<div class="col-6">'+validSymbols[index].modules.main+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5"><button id="'+ validSymbols[index].name +'SecondaryModulesLink" href="" onclick="modalModifySymbolModules(this)" value="'+validSymbols[index].name+'" class="btn btn-outline text-info p-0 symbolLinks" data-toggle="modal" data-target="#modifySymbolModulesCard">Secondary modules</button></div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'SecondaryModules" class="symbolSecondaryModules'+index+'"></div>'+ 
+                      //Aqui debería ir la de módulos secundarios
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Category</div>'+
+                      '<div class="col-6">'+validSymbols[index].category+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">ProjectTypeOfValue</div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'PTOV">'+validSymbols[index].projectTypeOfValue+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">ProgrammingLanguageSymbolType</div>'+
+                      '<div class="col-6" id="'+ validSymbols[index].name +'PLST">'+validSymbols[index].programmingLanguageSymbolType+'</div>'+
+                    '</div>'+
+                  '</div>'+
+                '</td>'+
+              '</tr>';
+
+
+              $(item).appendTo(".symbolsValidTableBody");
+
+              //Calculate and add indexes and secondary modules
+              var span = '';
+              if(validSymbols[index].is_indexed=='True'){
+                indexNumber = validSymbols[index].indexes.length-1;
+                for (indexesIndex = 0; indexesIndex < validSymbols[index].indexes.length; indexesIndex++) {
+                  span = span+ '<span>' + validSymbols[index].indexes[indexesIndex] + '</span>';
+                  if (indexesIndex != indexNumber) {
+                    span = span + ', ';
+                  }
+                }
+                document.getElementById(validSymbols[index].name +"Indexes").innerHTML= span;
+              }else{
+                document.getElementById(validSymbols[index].name +"IndexesDiv").style.display="none";
+              }
+
+
+
+              moduleNumber = validSymbols[index].modules.secondary.length-1;
+              span = '';
+            
+              for (modulesIndex = 0; modulesIndex < validSymbols[index].modules.secondary.length; modulesIndex++) {
+                span = span+ '<span>' + validSymbols[index].modules.secondary[modulesIndex] + '</span>';
+                if (modulesIndex != moduleNumber) {
+                  span = span + ', ';
+                }
+              }
+              document.getElementById(validSymbols[index].name +"SecondaryModules").innerHTML= span;
+
+              
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <div class="tab-pane fade" id="symbolspendingTabContent">
+    <!-- Pending symbols over here -->
+    <div class="d-flex bd-highlight">
+      <div class="ml-auto p-1 bd-highlight">
+        <ul class="pagination pagination-sm mb-1" id="currentPaginationNonValidated">
+          
+          <li class="page-item" id="firstPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#">&laquo;</a>
+          </li>
+          <li class="page-item" id="previousPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#">Previous</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationNonValidated" title="" onclick="removeFade('lesserPaginationNonValidated', false)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item active" id="activePaginationNonValidated" value=1>
+            <a class="page-link border border-secondary" href="#">1</a>
+          </li>
+
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationNonValidated" title="" onclick="removeFade('greaterPaginationNonValidated',false)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item" id="nextPaginationNonValidated">
+            <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+          </li>
+          <li class="page-item" id="lastPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top" title="Last page">&raquo;</a>
+          </li>
+        </ul>
+        <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span id="pageNumberNonValidated">0</span></small>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Symbol name</th>
+            <th scope="col">
+              <select class="custom-select text-primary" id="inputFilterMainModuleNonValidated" onchange="filterNonValidated()">
+                <option value="Main module" selected>Main module</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputFilterMainModuleNonValidated");
+                  for (var i = 0; i < dataDictionary.modules.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.modules[i].name;
+                    option.text = dataDictionary.modules[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+            </th>
+            <th scope="col">
+              <select class="custom-select text-primary" id="inputFilterCategoryNonValidated" onchange="filterNonValidated()">
+                <option value="Category" selected>Category</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputFilterCategoryNonValidated");
+                  for (var i = 0; i < dataDictionary.categories.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.categories[i].name;
+                    option.text = dataDictionary.categories[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+            </th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="symbolsNonValidTableBody" id="symbolsNonValidTableBody">
+
+
+
+          <script type="text/javascript">
+            var nonvalidSymbols = dataDictionary.symbols.non_validated;
+            for (index = 0; index < nonvalidSymbols.length; index++) {
+
+              item = '<tr class="accordion-toggle collapsed" id="'+ nonvalidSymbols[index].name +'Accordion" data-toggle="collapse" data-parent="#'+ nonvalidSymbols[index].name +'Accordion" href="#nonvalidCollapse'+index+'">'+
+                '<td class="expand-button">></td>' +
+                '<td id="'+ nonvalidSymbols[index].name +'">'+ nonvalidSymbols[index].name +'</td>' +
+                '<td id="'+ nonvalidSymbols[index].name +'Module">'+ nonvalidSymbols[index].modules.main +'</td>' +
+                '<td id="'+ nonvalidSymbols[index].name +'Category">'+ nonvalidSymbols[index].category +'</td>'+
+                '<td><button id="pendingmodifyButton'+index+'" href="" onclick="modalModify(this)" value="'+nonvalidSymbols[index].name+'" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifySymbolCard">Modify</button>'+
+                '<button id="pendingdeleteButton'+index+'" href="" onclick="modalDelete(this)" value="'+nonvalidSymbols[index].name+'" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteSymbolCard">Delete</button>'+
+                '</td></tr>'+
+                '<tr class="hide-table-padding">'+ 
+                '<td></td>'+
+                '<td colspan="4">'+
+                  '<div id="nonvalidCollapse'+index+'" class="collapse in p-3">'+
+                    '<div class="row">'+
+                      '<div class="col-5">Definition</div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'Definition">'+nonvalidSymbols[index].definition+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Unit</div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'Unit">'+nonvalidSymbols[index].unit+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5"><button id="'+ nonvalidSymbols[index].name +'IsIndexedLink" href="" onclick="modalModifyIndexes(this)" value="'+nonvalidSymbols[index].name+'" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#modifySymbolIndexesCard">Is_indexed</button></div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'Is_indexed">'+nonvalidSymbols[index].is_indexed+'</div>'+
+                    '</div>'+
+                    '<div id="'+ nonvalidSymbols[index].name +'IndexesDiv" class="row">'+
+                      '<div class="col-5"><button id="'+ nonvalidSymbols[index].name +'IndexesLink" href="" onclick="modalModifyIndexes(this)" value="'+nonvalidSymbols[index].name+'" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#modifySymbolIndexesCard">Indexes</button></div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'Indexes" class="pendingSymbolIndexes'+index+'"></div>'+ 
+                      //The script loads indexes if needed
+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Main module</div>'+
+                      '<div class="col-6">'+nonvalidSymbols[index].modules.main+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5"><button id="'+ nonvalidSymbols[index].name +'SecondaryModulesLink" href="" onclick="modalModifySymbolModules(this)" value="'+nonvalidSymbols[index].name+'" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#modifySymbolModulesCard">Secondary modules</button></div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'SecondaryModules" class="pendingSymbolSecondaryModules'+index+'"></div>'+ 
+                      //The script load secondary modules
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">Category</div>'+
+                      '<div class="col-6">'+nonvalidSymbols[index].category+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">ProjectTypeOfValue</div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'PTOV">'+nonvalidSymbols[index].projectTypeOfValue+'</div>'+
+                    '</div>'+
+                    '<div class="row">'+
+                      '<div class="col-5">ProgrammingLanguageSymbolType</div>'+
+                      '<div class="col-6" id="'+ nonvalidSymbols[index].name +'PLST">'+nonvalidSymbols[index].programmingLanguageSymbolType+'</div>'+
+                    '</div>'+
+                    '<div class="row ml-auto pt-2 bd-highlight">'+
+                      '<button id="'+ nonvalidSymbols[index].name +'Validate" value="'+ nonvalidSymbols[index].name +'" class="btn btn-success btn-sm" onclick="modalValidate(this, dataDictionary.indexes)" data-toggle="modal" data-target="#validateSymbolCard">Validate symbol</button>'+
+                    '</div>'+
+                  '</div>'+
+                '</td>'+
+              '</tr>';
+
+              $(item).appendTo(".symbolsNonValidTableBody");
+              
+              //Indexes and secondary modules
+              var span = '';
+              if(nonvalidSymbols[index].is_indexed=='True'){
+                indexNumber = nonvalidSymbols[index].indexes.length-1;
+                for (indexesIndex = 0; indexesIndex < nonvalidSymbols[index].indexes.length; indexesIndex++) {
+                  span = span+ '<span>' + nonvalidSymbols[index].indexes[indexesIndex] + '</span>';
+                  if (indexesIndex != indexNumber) {
+                    span = span + ', ';
+                  }
+                }
+                document.getElementById(nonvalidSymbols[index].name +"Indexes").innerHTML= span;
+              }else{
+                document.getElementById(nonvalidSymbols[index].name +"IndexesDiv").style.display="none";
+              }
+              moduleNumber = nonvalidSymbols[index].modules.secondary.length-1;
+              span = '';
+            
+              for (modulesIndex = 0; modulesIndex < nonvalidSymbols[index].modules.secondary.length; modulesIndex++) {
+                span = span+ '<span>' + nonvalidSymbols[index].modules.secondary[modulesIndex] + '</span>';
+                if (modulesIndex != moduleNumber) {
+                  span = span + ', ';
+                }
+              }
+              document.getElementById(nonvalidSymbols[index].name +"SecondaryModules").innerHTML= span;
+
+
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addNewSymbolCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertAdd"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add new symbol to the dictionary</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Fill the symbol's new information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Symbol Name</label>
+            <input type="text" class="form-control" placeholder="Symbol Name" id="inputAddSymbolName">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Definition</label>
+            <textarea class="form-control" id="inputAddSymbolDefinition" rows="3" placeholder="Definition"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Unit</label>
+            <input type="text" class="form-control" placeholder="Unit" id="inputAddSymbolUnit">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Module</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputAddModule">
+                <option selected>Choose...</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputAddModule");
+                  for (var i = 0; i < user.roles.length; i++) {
+                    if(user.roles[i].module == 'All'){
+                      for (var j = 0; j < dataDictionary.modules.length; j++) {
+                        var option = document.createElement("option");
+                        option.value = dataDictionary.modules[j].name;
+                        option.text = dataDictionary.modules[j].name;
+                        selectList.appendChild(option);
+                      } 
+                    }else{
+                      var option = document.createElement("option");
+                      option.value = user.roles[i].module;
+                      option.text = user.roles[i].module;
+                      selectList.appendChild(option);
+                    }
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputAddModule">Options</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Category</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputAddCategory">
+                <option selected>Choose...</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputAddCategory");
+                  for (var i = 0; i < dataDictionary.categories.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.categories[i].name;
+                    option.text = dataDictionary.categories[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputAddCategory">Options</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">ProjectTypeOfValue</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputAddPTOV">
+                <option selected>Choose...</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputAddPTOV");
+                  for (var i = 0; i < dataDictionary.ProjectTypeOfValue.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.ProjectTypeOfValue[i].name;
+                    option.text = dataDictionary.ProjectTypeOfValue[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputAddPTOV">Options</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">ProgrammingLanguageSymbolType</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputAddPLST">
+                <option selected>Choose...</option>
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputAddPLST");
+                  for (var i = 0; i < dataDictionary.ProgrammingLanguageSymbolType.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.ProgrammingLanguageSymbolType[i].name;
+                    option.text = dataDictionary.ProgrammingLanguageSymbolType[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputAddPLST">Options</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="addNewSymbolCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="addSymbolToDictionary(user.roles)">Add</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modifySymbolCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertModify"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify symbol from the dictionary: <strong id="previousSymbolName">SymbolName</strong></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Symbol's information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Symbol Name</label>
+            <input type="text" class="form-control" placeholder="Symbol Name" id="inputModifySymbolName">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Definition</label>
+            <textarea class="form-control" id="inputModifySymbolDefinition" rows="3" placeholder="Definition"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Unit</label>
+            <input type="text" class="form-control" placeholder="Unit" id="inputModifySymbolUnit">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Module</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputModifyModule">
+                
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputModifyModule");
+                  for (var i = 0; i < user.roles.length; i++) {
+                    if(user.roles[i].module == 'All'){
+                      for (var j = 0; j < dataDictionary.modules.length; j++) {
+                        var option = document.createElement("option");
+                        option.value = dataDictionary.modules[j].name;
+                        option.text = dataDictionary.modules[j].name;
+                        selectList.appendChild(option);
+                      } 
+                    }else{
+                      var option = document.createElement("option");
+                      option.value = user.roles[i].module;
+                      option.text = user.roles[i].module;
+                      selectList.appendChild(option);
+                    }
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputModifyModule">Options</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Category</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputModifyCategory">
+                
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputModifyCategory");
+                  for (var i = 0; i < dataDictionary.categories.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.categories[i].name;
+                    option.text = dataDictionary.categories[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputModifyCategory">Options</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">ProjectTypeOfValue</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputModifyPTOV">
+                
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputModifyPTOV");
+                  for (var i = 0; i < dataDictionary.ProjectTypeOfValue.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.ProjectTypeOfValue[i].name;
+                    option.text = dataDictionary.ProjectTypeOfValue[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputModifyPTOV">Options</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">ProgrammingLanguageSymbolType</label>
+            <div class="input-group mb-3">
+              <select class="custom-select" id="inputModifyPLST">
+                
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputModifyPLST");
+                  for (var i = 0; i < dataDictionary.ProgrammingLanguageSymbolType.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = dataDictionary.ProgrammingLanguageSymbolType[i].name;
+                    option.text = dataDictionary.ProgrammingLanguageSymbolType[i].name;
+                    selectList.appendChild(option);  
+                  }
+                </script>
+              </select>
+              <div class="input-group-append">
+                <label class="input-group-text" for="inputModifyPLST">Options</label>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifySymbolCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifySymbolFromDictionary()">Modify</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="deleteSymbolCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlert"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete symbol</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure of deleting the symbol's information?</p>
+        <strong><p class="text-center" id="deleteSymbolName">symbol name</p></strong>
+      </div>
+      <p class="m-auto"><small>The symbol must not have any secondary modules attached.</small></p>
+      <p class="m-auto text-warning"><small id="deleteSecondaryModules">secondary modules</small></p>
+      <div class="modal-footer d-flex">
+        <button id="deleteSymbolCardButton" type="button" class="btn btn-danger mr-auto"
+          onclick="deleteSymbolFromDictionary()">Delete</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="validateSymbolCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlert"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Validate symbol</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure of validating the symbol?</p>
+        <strong><p id="validateSymbolName">symbol name</p></strong>
+      </div>
+      <p class="m-auto"><small>The symbol information must be well formed.</small></p>
+      <p class="m-auto text-warning"><small id="validateSymbolErrorText">is_indexed</small></p>
+      <p class="m-auto" id="validateSymbolErrorTextNonValidIndex"><small>The following indexes are not validated:</small></p>
+      <p class="m-auto text-danger"><small id="validateSymbolErrorText2">indexes non validated</small></p>
+      <div class="modal-footer d-flex">
+        <button id="validateSymbolCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="validateSymbolFromDictionary(this)">Validate</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modifySymbolModulesCard" >
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlert"></div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify symbol modules</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Currently modifying the symbol: <strong id="modifySecondaryModulesSymbolName">symbol name</strong></p>
+        <hr>
+        <div class="d-flex flex-row">
+          <div class="m-auto w-50">
+            <p class="text-center mt-auto">Main module: </p>
+            <div id="modifySecondaryModulesMainSelect" class="modifySecondaryModulesMainSelect d-flex justify-content-center">
+              <!-- Here goes a select made in js -->
+              <select class="custom-select text-primary w-75" id="inputMainModuleModifySecondary">
+                <script type="text/javascript">
+                  var selectList = document.getElementById("inputMainModuleModifySecondary");
+                  for ( i = 0; i < dataDictionary.modules.length; i++) {
+                      var option = document.createElement("option");
+                      option.value = dataDictionary.modules[i].name;
+                      option.text = dataDictionary.modules[i].name;
+                      selectList.appendChild(option);
+                  }
+                </script>
+              </select>
+
+            </div>
+          </div>
+          <div class="m-auto w-50">
+            <p class="text-center mt-auto">Secondary modules:</p>
+            <div id="modifySecondaryModulesSecondarySelects" class="modifySecondaryModulesSecondarySelects d-flex justify-content-center flex-column">
+              <!-- Here goes a select made in js -->
+      
+            </div>
+            <div class="d-flex"><button class="btn btn-sm btn-outline-info m-auto" onclick="addSelectSecondaryModules(dataDictionary.modules)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <p class="m-auto p-1"><small>The symbol must have at least a main module associated, but no secondary modules are needed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifySecondaryModulesSymbolCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifySymbolModulesFromDictionary()">Save</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modifySymbolIndexesCard" >
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlert"></div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify symbol indexes</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Currently modifying the symbol: <strong id="modifyIndexesSymbolName">symbol name</strong></p>
+        <hr>
+        <div class="d-flex flex-row">
+          <div class="m-auto w-50">
+            <p class="text-center mt-auto">Is_Indexed: </p>
+            <div id="modifyIndexesMainSelect" class="d-flex justify-content-center">
+              <!-- Selected option in js -->
+              <select class="custom-select text-primary w-75" onchange="modifyIndexIsIndexedChanged()" id="inputIndexesModifyIsIndexed">
+                <option value="True">True</option>
+                <option value="False">False</option>
+              </select>
+
+            </div>
+          </div>
+          <div class="m-auto w-50">
+            <p class="text-center mt-auto">Indexes associated:</p>
+            <div id="modifyIndexesSelects" class="modifyIndexesSelects d-flex justify-content-center flex-column">
+              <!-- Here goes a select made in js -->
+    
+            </div>
+            <div class="d-flex"><button class="btn btn-sm btn-outline-info m-auto" id="modifySymbolIndexesButtonAddSelect" onclick="addSelectIndexes(dataDictionary.indexes)">+</button></div>
+          </div>
+        </div>
+      </div>
+      <p class="m-auto p-1"><small>If the symbol doesn't have any index associated "Is_Indexed" property won't be set false by default after saving.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifyIndexesSymbolCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifySymbolIndexesFromDictionary()">Save</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  $(document).ready(function(){
+    //popoverInitialization("funcionaporfavor");
+    popoverInitialization("lesserPaginationValidated", true);
+    popoverInitialization("greaterPaginationValidated", true);
+    popoverInitialization("lesserPaginationNonValidated", false);
+    popoverInitialization("greaterPaginationNonValidated", false);
+
+    $('body').on('click', function (e) {
+        //Hides popover and simulates click on toggle to make it work on the next click
+        if ($(e.target).data('toggle') !== 'popover'
+            && $(e.target).parents('.popover.in').length === 0) {
+              if ($("#lesserPaginationValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#lesserPaginationValidated").click(); 
+              }
+              if ($("#greaterPaginationValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#greaterPaginationValidated").click();
+              } 
+              if ($("#lesserPaginationNonValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#lesserPaginationNonValidated").click();
+              }
+              if ($("#greaterPaginationNonValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#greaterPaginationNonValidated").click();  
+              } 
+              $('[data-toggle="popover"]').popover('hide');
+              
+        }
+    });
+    $('a').on('click', function (e) {
+      $('a').not(this).popover('hide');
+    });
+
+    $(document).on('click', '.inputButtonPagination', function(e){
+      if ($("#lesserPaginationValidated").next('div.popover:visible').length || $("#greaterPaginationValidated").next('div.popover:visible').length){
+        setSymbolPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, is_FilteredValidated, true);
+      }
+      if ($("#lesserPaginationNonValidated").next('div.popover:visible').length || $("#greaterPaginationNonValidated").next('div.popover:visible').length){
+        setSymbolPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, is_FilteredNonValidated, false);
+      }
+    });
+   
+  });
+</script>
+
+
+
+<script>
+  //Initial tabulation
+  window.onload = setActiveNav(tabulation, show);
+  //Button permissions
+  window.onload = setSymbolButtonPermissions(user.roles);
+  //Initial pagination
+  window.onload = setSymbolPagination(numberOfPages, 1, is_FilteredValidated, true);  
+  window.onload = setSymbolPagination(numberOfPages, 1, is_FilteredNonValidated, false);
+
+</script>
+
+{% endblock %}

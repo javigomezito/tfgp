@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block body %}
+<script type="text/javascript">
+
+    var dataDictionary = JSON.parse('{{ dataDictionary | safe}}');
+</script>
+<div class="border border-primary p-2">
+    <div class="mt-2 pb-2 border-bottom border-primary w-100 d-flex">
+        <div class="ml-3 w-25">
+            <img  alt="Logo" id="projectLogo">
+        </div>
+        <div class="d-flex justify-content-center w-50">   
+            <h1 class="text-center text-success" id="projectName"></h1>
+        </div>
+    </div>
+    <h2 class="text-center p-3 text-primary">Project Overview:</h2>
+    <h4 class="m-2 ml-4 pb-2 text-info" id="projectHeader"></h4><br>
+    <h2 class="text-center p-3 text-primary">Project Description:</h2>
+    <h4 class="m-2 ml-4 mb-5 pb-2" id="projectDescription"></h4>
+</div>
+
+<script>
+    try {
+        document.getElementById("projectName").innerHTML=dataDictionary.name.replace("\\n", "<br>");    
+    } catch (error) {
+        document.getElementById("projectName").innerHTML="Project Name";
+    }
+    try {
+        document.getElementById("projectHeader").innerHTML=dataDictionary.header.replace("\\n", "<br>");
+    } catch (error) {
+        document.getElementById("projectHeader").innerHTML="Project Header";
+    }
+    try {
+        document.getElementById("projectDescription").innerText=dataDictionary.description.replace("\\n", "<br>");    
+    } catch (error) {
+        document.getElementById("projectDescription").innerText="Project Description";
+    }
+    try {
+        //url='css/projectInfo/'+dataDictionary.logo;
+        //"{{url_for('static', filename='css/projectInfo/Logo.PNG')}}"
+        document.getElementById("projectLogo").setAttribute("src", "{{url_for('static', filename='css/projectInfo/Logo.PNG')}}");
+    } catch (error) {
+        
+    }
+</script>
+
+<script>
+    window.onload = setActiveNav(tabulation, show);
+</script>
+{% endblock %}

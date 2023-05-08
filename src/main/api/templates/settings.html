@@ -1,0 +1,766 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript" src="{{url_for('static', filename='js/settings.js')}}"></script>
+<script>
+  var dataDictionary= JSON.parse('{{ dataDictionary | safe}}');
+
+  var usersPagination = parseInt('{{ users_pagination }}');
+  var numberOfPages = 4;
+</script>
+
+
+<h1>SETTINGS</h1>
+<div class="d-flex p-2">
+  <div>
+    <ul class="nav nav-pills flex-column border rounded">
+      <li class="nav-item" id="profileSettingsNavI">
+        <a class="nav-link active" id="profileSettingsNav" data-toggle="tab" href="#ProfileSettings">Profile
+          Settings</a>
+      </li>
+      <li class="nav-item" id="generalSettingsNavI">
+        <a class="nav-link" id="generalSettingsNav" data-toggle="tab" href="#GeneralSettings">General Settings</a>
+      </li>
+      <li class="nav-item" id="userManagementNavI">
+        <a class="nav-link" id="userManagementNav" data-toggle="tab" href="#UserManagement">User management</a>
+      </li>
+      <li class="nav-item" id="projectManagementNavI">
+        <a class="nav-link" id="projectManagementNav" data-toggle="tab" href="#ProjectManagement">Project management</a>
+      </li>
+    </ul>
+  </div>
+
+  <div id="myTabContent" class="tab-content w-75 pl-5">
+    <div class="tab-pane fade show active" id="ProfileSettings">
+      <div>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">User name</th>
+              <th scope="col">User fullname</th>
+              <th scope="col">Email</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-active">
+              <th scope="row" id="usernameTable"></th>
+              <td id="fullnameTable"></td>
+              <td id="emailTable"></td>
+              <td id="RolesTable" class="d-none"></td>
+              <script type="text/javascript">
+                document.getElementById("usernameTable").innerText = user.username;
+                document.getElementById("usernameTable").id = user.username + "Username";
+                document.getElementById("fullnameTable").innerText = user.full_name;
+                document.getElementById("fullnameTable").id = user.username + "Fullname";
+                document.getElementById("emailTable").innerText = user.email;
+                document.getElementById("emailTable").id = user.username + "Email";
+                document.getElementById("RolesTable").id = user.username + "Roles";
+                
+                roleNumber = user.roles.length-1;
+                span = '';
+                for (rolesIndex = 0; rolesIndex < user.roles.length; rolesIndex++) {
+                  span = span+ user.roles[rolesIndex].role + ',' + user.roles[rolesIndex].module;
+                  if (rolesIndex != roleNumber) {
+                    span = span + ',';
+                  }
+                }
+                document.getElementById(user.username +"Roles").innerText= span;
+                
+              </script>
+              <td>
+                <button id="modifyUserProfileButton" href="" onclick="modalModifyUserProfile(this)"
+                  class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal"
+                  data-target="#modifyUserProfileCard">Modify profile</button>
+                <button id="changeUserPasswordButton" href="" onclick="modalChangeUserPassword(this)"
+                  class="mr-1 btn btn-danger btn-sm modifyDelete" data-toggle="modal"
+                  data-target="#changeUserPasswordCard">Change password</button>
+              </td>
+              <script>
+                document.getElementById("modifyUserProfileButton").value = user.username;
+                document.getElementById("changeUserPasswordButton").value = user.username;
+              </script>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="GeneralSettings">
+
+      <div>
+        Project Logo:
+        <div class="w-100 mt-2">
+            <img  alt="Logo" id="projectLogo">
+        </div>
+        <div class="form-group">
+          <label class="col-form-label" for="inputDefault">Project Name</label>
+          <input class="form-control" id="inputProjectName" placeholder="Project Name"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="col-form-label" for="inputDefault">Project Header</label>
+          <textarea class="form-control" id="inputProjectHeader" rows="6" placeholder="Project Header"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="col-form-label" for="inputDefault">Project Definition</label>
+          <textarea class="form-control" id="inputProjectDefinition" rows="10" placeholder="Project Definition"></textarea>
+        </div>
+        
+    </div>
+    
+    <script>
+        try {
+            document.getElementById("inputProjectName").value=dataDictionary.projectName.replace("\\n", "\n");    
+        } catch (error) {
+            document.getElementById("inputProjectName").value="Project Name";
+        }
+        try {
+            document.getElementById("inputProjectHeader").value=dataDictionary.projectHeader.replace("\\n", "\n");
+        } catch (error) {
+            document.getElementById("inputProjectHeader").value="Project Header";
+        }
+        try {
+            document.getElementById("inputProjectDefinition").value=dataDictionary.projectDescription.replace("\\n", "\n");    
+        } catch (error) {
+            document.getElementById("inputProjectDefinition").value="Project Description";
+        }
+        try {
+            //url='css/projectInfo/'+dataDictionary.logo;
+            //"{{url_for('static', filename='css/projectInfo/Logo.PNG')}}"
+            document.getElementById("projectLogo").setAttribute("src", "{{url_for('static', filename='css/projectInfo/Logo.PNG')}}");
+        } catch (error) {
+            
+        }
+    </script>
+    
+    </div>
+    <div class="tab-pane fade" id="UserManagement">
+      <div class="d-flex bd-highlight">
+        <div class="d-flex">
+          <div class="mr-auto p-1 bd-highlight">
+            <button class="btn btn-success" data-toggle="modal" id="buttonAddNewUser" onclick="modalAdd()" data-target="#addUserCard">New User</button>
+          </div>
+        </div>
+        <div class="ml-auto p-1 bd-highlight">
+          <ul class="pagination pagination-sm mb-1" id="currentPaginationUser">
+
+            <li class="page-item" id="firstPaginationUser">
+              <a class="page-link border border-secondary" href="#">&laquo;</a>
+            </li>
+            <li class="page-item" id="previousPaginationUser">
+              <a class="page-link border border-secondary" href="#">Previous</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationUser"
+                title="" onclick="removeFade('lesserPaginationUser')" data-toggle="popover"
+                data-trigger="click" data-content="">...</a>
+            </li>
+
+            <li class="page-item active" id="activePaginationUser" value=1>
+              <a class="page-link border border-secondary" href="#">1</a>
+            </li>
+
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationUser"
+                title="" onclick="removeFade('greaterPaginationUser')" data-toggle="popover"
+                data-trigger="click" data-content="">...</a>
+            </li>
+
+            <li class="page-item" id="nextPaginationUser">
+              <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+            </li>
+            <li class="page-item" id="lastPaginationUser">
+              <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top"
+                title="Last page">&raquo;</a>
+            </li>
+          </ul>
+          <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span
+                id="pageNumberUser">0</span></small>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive" id="userGlobalTable">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col" class="">#</th>
+              <th scope="col" class="">User name</th>
+              <th scope="col" class="">Full name</th>
+              <th scope="col" class="">Email</th>
+              <th scope="col" class="">Actions</th>
+
+            </tr>
+          </thead>
+          <tbody class="userGlobalTableBody" id="userGlobalTableBody">
+            <script type="text/javascript">
+              if(user.roles[0].role=='Project Leader' || user.roles[0].role=='General Supervisor'){
+                userList=dataDictionary.userList;
+                for (index = 0; index < userList.length; index++) {
+                  //console.log(userList[index].roles[0].module);
+                  item = '<tr id="' + userList[index].username + 'Accordion" data-toggle="collapse" data-parent="#' + userList[index].username + 'Accordion">' +
+                    '<td></td>' +
+                    '<td id="' + userList[index].username + '">' + userList[index].username + '</td>' +
+                    '<td id="' + userList[index].username + 'Fullname">' + userList[index].full_name + '</td>' +
+                    '<td id="' + userList[index].username + 'Email">' + userList[index].email + '</td>' +
+                    '<td id="' + userList[index].username + 'Roles" class="d-none"></td>' +
+                    '<td><button id="' + userList[index].username + 'modifyButton" href="" onclick="modalModifyUserProfile(this)" value="' + userList[index].username + '" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyUserProfileCard">Modify</button>' +
+                    '<button id="' + userList[index].username + 'deleteButton" href="" onclick="modalDeleteUser(this)" value="' + userList[index].username + '" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteUserCard">Delete</button>' +
+                    '</td></tr>';
+
+                  $(item).appendTo(".userGlobalTableBody");
+                  
+                  
+                  roleNumber = userList[index].roles.length-1;
+                  span = '';
+                  for (rolesIndex = 0; rolesIndex < userList[index].roles.length; rolesIndex++) {
+                    span = span+ userList[index].roles[rolesIndex].role + ',' + userList[index].roles[rolesIndex].module;
+                    if (rolesIndex != roleNumber) {
+                      span = span + ',';
+                    }
+                  }
+                  document.getElementById(userList[index].username +"Roles").innerText= span;
+                    
+                }
+              }
+            </script>
+
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="tab-pane fade" id="ProjectManagement">
+      <h5>Click on one of the table name links to see the items:</h5>
+      <table class="w-100 table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Number</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2">
+              <div class="row" id="PLSTRow">
+                <div class="col-6"><button id="PLSTRowLink" href="" onclick="modalPLST()" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#PLSTorPTOVCard">Programming Languaje Symbol Type</button></div>
+                <div class="col-6" id="PLSTRowNumber"></div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <div class="row" id="PTOVRow">
+                <div class="col-6"><button id="PTOVRowLink" href="" onclick="modalPTOV()" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#PLSTorPTOVCard">Project Type Of Value</button></div>
+                <div class="col-6" id="PTOVRowNumber"></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <script>
+        document.getElementById("PLSTRowNumber").innerText= dataDictionary.ProgrammingLanguageSymbolType.length;
+        document.getElementById("PTOVRowNumber").innerText= dataDictionary.ProjectTypeOfValue.length;
+      </script>
+      
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="addUserCard">
+  <div class="text-center" id="warningAlertAdd"></div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add new user: </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <hr>
+        <div class="d-flex flex-row">
+          <div class="m-auto w-50">
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Username</label>
+              <input type="text" class="form-control" placeholder="Username" id="inputAddUsername">
+            </div>
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Fullname</label>
+              <input type="text" class="form-control" placeholder="Fullname" id="inputAddFullname">
+            </div>
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Email</label>
+              <input type="text" class="form-control" placeholder="Email" id="inputAddEmail">
+            </div>
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Password</label>
+              <input type="password" class="form-control" placeholder="Password" id="inputAddPassword">
+            </div>
+          </div>
+
+          <div class="w-50">
+            <div class="d-flex">
+              <div class="col">
+                <p class="text-center mt-0">User Role:</p>
+              </div>
+            </div>
+            <div class="d-flex justify-content-center flex-column">
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">General Supervisor:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchAddGeneralSupervisor">
+                    <label class="custom-control-label" for="switchAddGeneralSupervisor">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">Module Supervisor:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchAddModuleSupervisor">
+                    <label class="custom-control-label" for="switchAddModuleSupervisor">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">Module Programmer:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchAddModuleProgrammer">
+                    <label class="custom-control-label text-info" for="switchAddModuleProgrammer">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div>
+                
+                <p class="text-center mt-0">Modules:</p>
+                
+                <div class="row d-flex m-auto">
+                  <select class="m-auto custom-select text-primary w-75" id="inputAddMainUserModule">
+                    <option value="All" selected disabled>All modules</option>
+                    <option value="Choose">-- Choose --</option>
+                  </select>
+                  <script type="text/javascript">
+                    selectList = document.getElementById("inputAddMainUserModule");
+                    for (i = 0; i < dataDictionary.modules.length; i++) {
+                      option = document.createElement("option");
+                      option.value = dataDictionary.modules[i].name;
+                      option.text = dataDictionary.modules[i].name;
+                      selectList.appendChild(option);  
+                    } 
+                  </script>
+                  <div class="w-100 border-bottom border-primary mt-2"></div>
+                  <div class="d-flex justify-content-center flex-column w-100" id="addUserProfileSelects">
+
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex mt-3"><button class="btn btn-sm btn-outline-info m-auto"
+                  id="addUserModulesAddSelect" onclick="addSelectAddUserModules(dataDictionary.modules)">+</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p class="m-auto text-center"><small>All the information above has to be filled to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="addUserCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="addUserToDictionary()">Add</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modifyUserProfileCard">
+  <div class="text-center" id="warningAlertModifyUserProfile"></div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit user profile: </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Currently modifying the user: <strong id="previousUserName">UserName</strong></p>
+        <hr>
+        <div class="d-flex flex-row">
+          <div class="m-auto w-50">
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Username</label>
+              <input type="text" class="form-control" placeholder="Username" id="inputModifyUsername">
+            </div>
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Fullname</label>
+              <input type="text" class="form-control" placeholder="Fullname" id="inputModifyFullname">
+            </div>
+            <div class="form-group w-75">
+              <label class="col-form-label" for="inputDefault">Email</label>
+              <input type="text" class="form-control" placeholder="Email" id="inputModifyEmail">
+            </div>
+          </div>
+
+          <div class="w-50" id="modifyRoleModuleDiv">
+            <div class="d-flex">
+              <div class="col">
+                <p class="text-center mt-0">User Role:</p>
+              </div>
+            </div>
+            <div class="d-flex justify-content-center flex-column">
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">General Supervisor:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchGeneralSupervisor">
+                    <label class="custom-control-label" for="switchGeneralSupervisor">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">Module Supervisor:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchModuleSupervisor">
+                    <label class="custom-control-label" for="switchModuleSupervisor">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex">
+                <div class="w-75">
+                  <p class="text-center mt-0">Module Programmer:</p>
+                </div>
+                <div class="w-25">
+                  <div class="custom-control custom-switch pr-2">
+                    <input type="checkbox" class="custom-control-input" id="switchModuleProgrammer">
+                    <label class="custom-control-label text-info" for="switchModuleProgrammer">Select</label>
+                  </div>
+                </div>
+              </div>
+              <div>
+                
+                <p class="text-center mt-0">Modules:</p>
+                
+                <div class="row d-flex m-auto">
+                  <select class="m-auto custom-select text-primary w-75" id="inputMainUserModule">
+                    <option value="All" selected disabled>All modules</option>
+                    <option value="Choose">-- Choose --</option>
+                  </select>
+                  <script type="text/javascript">
+                    selectList = document.getElementById("inputMainUserModule");
+                    for (i = 0; i < dataDictionary.modules.length; i++) {
+                      option = document.createElement("option");
+                      option.value = dataDictionary.modules[i].name;
+                      option.text = dataDictionary.modules[i].name;
+                      selectList.appendChild(option);  
+                    } 
+                  </script>
+                  <div class="w-100 border-bottom border-primary mt-2"></div>
+                  <div class="d-flex justify-content-center flex-column w-100" id="modifyUserProfileSelects">
+
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex mt-3"><button class="btn btn-sm btn-outline-info m-auto"
+                  id="modifyUserModulesAddSelect" onclick="addSelectUserModules(dataDictionary.modules)">+</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p class="m-auto text-center"><small>All the information above has to be filled to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="modifyUserProfileCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="modifyUserProfileFromDictionary()">Modify</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="changeUserPasswordCard">
+    <div class="text-center" id="warningAlertChangeUserPassword"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Change user password: <strong id="changePasswordUserName">UserName</strong></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Fill your old password and your new one below.</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Current password</label>
+              <input type="password" class="form-control" placeholder="Current password" id="inputPreviousPassword">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">New password</label>
+              <input type="password" class="form-control" placeholder="New password" id="inputNewPassword">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Repeat new password</label>
+              <input type="password" class="form-control" placeholder="Repeat new password" id="inputNewPasswordRepeat">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer d-flex">
+          <button id="changeUserPasswordCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="changeUserPasswordFromDictionary()">Save</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteUserCard">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete user</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure of <span class="text-danger">deleting</span> this user?</p>
+          <strong>
+            <p class="text-center" id="deleteUserName">user name</p>
+          </strong>
+        </div>
+        <div class="modal-footer d-flex">
+          <button id="deleteUserCardButton" type="button" class="btn btn-danger mr-auto"
+            onclick="deleteUserFromDictionary()">Delete</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="PLSTorPTOVCard" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="PLSTorPTOVTitle"></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <div class="row d-flex">
+                <th scope="col" class="w-75">Name</th>
+              </div>
+            </tr>
+          </thead>
+          <tbody id="PLSTorPTOVTableBody">
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  $(document).ready(function(){
+    popoverInitialization("lesserPaginationUser");
+    popoverInitialization("greaterPaginationUser");
+    
+    $('body').on('click', function (e) {
+        //Hides popover and simulates click on toggle to make it work on the next click
+        if ($(e.target).data('toggle') !== 'popover'
+            && $(e.target).parents('.popover.in').length === 0) {
+              if ($("#lesserPaginationUser").next('div.popover:visible').length){
+                //popover is visible
+                $("#lesserPaginationUser").click(); 
+              }
+              if ($("#greaterPaginationUser").next('div.popover:visible').length){
+                //popover is visible
+                $("#greaterPaginationUser").click();
+              } 
+               
+              $('[data-toggle="popover"]').popover('hide');
+              
+        }
+    });
+    $('a').on('click', function (e) {
+      $('a').not(this).popover('hide');
+    });
+
+    $(document).on('click', '.inputButtonPagination', function(e){
+      if ($("#lesserPaginationUser").next('div.popover:visible').length || $("#greaterPaginationUser").next('div.popover:visible').length){
+        setUserPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value);
+      }
+      
+    });
+
+    //All the below functions are for add and modify user cards
+
+    //On General Supervisor switch change toggle off the rest of the switches and clear data 
+    $('#switchAddGeneralSupervisor').change(function() {
+        if(this.checked) {
+          document.getElementById("addUserProfileSelects").innerHTML='';
+          document.getElementById("addUserModulesAddSelect").setAttribute("onclick", " ");
+          
+          $(this).prop("disabled", true);
+          $('#switchAddModuleSupervisor').prop('checked', false);
+          $('#switchAddModuleProgrammer').prop('checked', false);
+
+          $('#switchAddModuleSupervisor').prop('disabled', false);
+          $('#switchAddModuleProgrammer').prop('disabled', false);
+          
+          document.getElementById("inputAddMainUserModule").value='All';
+          $('#inputAddMainUserModule').prop('disabled', true);  
+        }        
+    });
+
+    $('#switchGeneralSupervisor').change(function() {
+        if(this.checked) {
+          document.getElementById("modifyUserProfileSelects").innerHTML='';
+          document.getElementById("modifyUserModulesAddSelect").setAttribute("onclick", " ");
+          
+          $(this).prop("disabled", true);
+          $('#switchModuleSupervisor').prop('checked', false);
+          $('#switchModuleProgrammer').prop('checked', false);
+
+          $('#switchModuleSupervisor').prop('disabled', false);
+          $('#switchModuleProgrammer').prop('disabled', false);
+          
+          document.getElementById("inputMainUserModule").value='All';
+          $('#inputMainUserModule').prop('disabled', true);  
+        }        
+    });
+
+    //On Module Supervisor switch change toggle off the General Supervisor switch and set up data to be filled
+    //If Module Programmer switch is off, this is disabled so we are sure that the user has at least one role selected
+    //When turned off sets Main module to default
+    $('#switchAddModuleSupervisor').change(function() {
+        if(this.checked) {
+          $('#inputAddMainUserModule').prop('disabled', false);
+          document.getElementById("inputAddMainUserModule").value='Choose';
+          
+          $('#switchAddGeneralSupervisor').prop('checked', false);
+          $('#switchAddGeneralSupervisor').prop('disabled', false);
+          
+          if($('#switchAddModuleProgrammer').prop("checked")) {
+            $(this).prop("disabled", false);
+            $('#switchAddModuleProgrammer').prop('disabled', false);
+         
+          }else{
+            $(this).prop("disabled", true);
+          }
+        }else{
+          $('#switchAddModuleProgrammer').prop('disabled', true);
+          $('#inputAddMainUserModule').prop('disabled', true);
+          document.getElementById("inputAddMainUserModule").value='All';
+        }        
+    });
+
+    $('#switchModuleSupervisor').change(function() {
+        if(this.checked) {
+          $('#inputMainUserModule').prop('disabled', false);
+          document.getElementById("inputMainUserModule").value='Choose';
+          
+          $('#switchGeneralSupervisor').prop('checked', false);
+          $('#switchGeneralSupervisor').prop('disabled', false);
+          
+          if($('#switchModuleProgrammer').prop("checked")) {
+            $(this).prop("disabled", false);
+            $('#switchModuleProgrammer').prop('disabled', false);
+         
+          }else{
+            $(this).prop("disabled", true);
+          }
+        }else{
+          $('#switchModuleProgrammer').prop('disabled', true);
+          $('#inputMainUserModule').prop('disabled', true);
+          document.getElementById("inputMainUserModule").value='All';
+        }        
+    });
+
+    //On Module Programmer switch change toggle off the General Supervisor switch and set up data to be filled
+    //If Module Supervisor switch is off, this is disabled so we are sure that the user has at least one role selected
+    //When turned off sets Programmer modules to default (empty)
+    $('#switchAddModuleProgrammer').change(function() {
+        if(this.checked) {
+          addSelectAddUserModules(dataDictionary.modules);
+          document.getElementById("addUserModulesAddSelect").setAttribute("onclick", "addSelectAddUserModules(dataDictionary.modules)");
+          
+          $('#switchAddGeneralSupervisor').prop('checked', false);
+          try {
+            $('#switchAddGeneralSupervisor').prop('disabled', false);
+          } catch (error) {
+          }
+          
+          if($('#switchAddModuleSupervisor').prop("checked")) {
+            $(this).prop("disabled", false);
+            $('#switchAddModuleSupervisor').prop('disabled', false);
+          }else{
+            $(this).prop("disabled", true);
+          }
+        }else{
+          $('#switchAddModuleSupervisor').prop('disabled', true);
+          document.getElementById("addUserProfileSelects").innerHTML='';
+          document.getElementById("addUserModulesAddSelect").setAttribute("onclick", " ");
+          
+        }        
+    });
+
+    $('#switchModuleProgrammer').change(function() {
+        if(this.checked) {
+          addSelectUserModules(dataDictionary.modules);
+          document.getElementById("modifyUserModulesAddSelect").setAttribute("onclick", "addSelectUserModules(dataDictionary.modules)");
+          
+          $('#switchGeneralSupervisor').prop('checked', false);
+          try {
+            $('#switchGeneralSupervisor').prop('disabled', false);
+          } catch (error) {
+          }
+          
+          if($('#switchModuleSupervisor').prop("checked")) {
+            $(this).prop("disabled", false);
+            $('#switchModuleSupervisor').prop('disabled', false);
+          }else{
+            $(this).prop("disabled", true);
+          }
+        }else{
+          $('#switchModuleSupervisor').prop('disabled', true);
+          document.getElementById("modifyUserProfileSelects").innerHTML='';
+          document.getElementById("modifyUserModulesAddSelect").setAttribute("onclick", " ");
+          
+        }        
+    });
+
+  });
+</script>
+
+
+<script>
+  window.onload = setTabPermissions(user.roles);
+
+  window.onload = setActiveNav(tabulation, show);
+
+ 
+  window.onload = setUserPagination(numberOfPages, 1);
+</script>
+{% endblock %}

@@ -1,0 +1,538 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript" src="{{url_for('static', filename='js/Indexes.js')}}"></script>
+<script type="text/javascript">
+
+  var dataDictionary = JSON.parse('{{ dataDictionary | safe}}');
+  var paginationValidated = parseInt('{{ validated_pagination }}');
+  var paginationNonValidated = parseInt('{{ nonvalidated_pagination }}');
+  var searchedText = '{{ searchedText }}';
+  var numberOfPages = 4;
+</script>
+
+<!--Error alert-->
+<div id="errorAlert"></div>
+<!--Success alert-->
+<div id="successAlert"></div>
+<h1>INDEXES</h1>
+<h2 id="searchedTextSpan"></h2>
+<script>
+  if(searchedText!=''){
+    if(searchedText.length<30){
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText;
+    }else{
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText.substring(0, 30)+'...';
+    }
+  }
+</script>
+<ul class="nav nav-tabs">
+  <li class="nav-item" id="indexesvalidatedTabI">
+    <a id="indexesvalidatedTab" class="nav-link active" data-toggle="tab"
+      href="#indexesvalidatedTabContent">Validated</a>
+  </li>
+  <li class="nav-item" id="indexespendingTabI">
+    <a id="indexespendingTab" class="nav-link" data-toggle="tab" href="#indexespendingTabContent">Pending</a>
+  </li>
+  <div class="ml-auto p-1 bd-highlight">
+    <button class="btn btn-success btn-sm" id="addNewIndexButton" data-toggle="modal" data-target="#addNewIndexCard" onclick="modalAdd()">Add index</button>
+  </div>
+</ul>
+
+<div id="myTabContent" class="tab-content pt-4">
+  <div class="tab-pane fade show active" id="indexesvalidatedTabContent">
+    <!-- Validated -->
+    <div class="d-flex bd-highlight">
+      <div class="ml-auto p-1 bd-highlight">
+        <ul class="pagination pagination-sm mb-1" id="currentPaginationValidated">
+          
+          <li class="page-item" id="firstPaginationValidated">
+            <a class="page-link border border-secondary" href="#">&laquo;</a>
+          </li>
+          <li class="page-item" id="previousPaginationValidated">
+            <a class="page-link border border-secondary" href="#">Previous</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationValidated" title="" onclick="removeFade('lesserPaginationValidated', true)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item active" id="activePaginationValidated" value=1>
+            <a class="page-link border border-secondary" href="#">1</a>
+          </li>
+
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationValidated" title="" onclick="removeFade('greaterPaginationValidated', true)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item" id="nextPaginationValidated">
+            <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+          </li>
+          <li class="page-item" id="lastPaginationValidated">
+            <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top" title="Last page">&raquo;</a>
+          </li>
+        </ul>
+        <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span id="pageNumberValidated">0</span></small>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive" id="validatedTable">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <div class="row d-flex">
+              <th scope="col" class="w-75">Index name</th>
+              <th scope="col">Actions</th>
+            </div>
+          </tr>
+        </thead>
+        <tbody class="indexesValidTableBody" id="indexesValidTableBody">
+          
+          <script type="text/javascript">
+            var validIndexes = dataDictionary.validated;
+            for (index = 0; index < validIndexes.length; index++) {
+
+              item = '<tr class="accordion-toggle collapsed" id="'+ validIndexes[index].index_name +'Accordion" data-toggle="collapse" data-parent="#'+ validIndexes[index].index_name +'Accordion" href="#collapse'+index+'">'+
+                '<td class="expand-button">></td>' +
+                '<td id="'+ validIndexes[index].index_name +'">'+ validIndexes[index].index_name +'</td>' +
+                '<td><button id="modifyButton" href="" onclick="modalModify(this)" value="'+validIndexes[index].index_name+'" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyIndexCard">Modify</button>'+
+                '<button id="deleteButton" href="" onclick="modalDelete(this)" value="'+validIndexes[index].index_name+'" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteIndexCard">Delete</button>'+
+                '</td></tr>'+
+                '<tr class="hide-table-padding">'+ 
+                '<td></td>'+
+                '<td colspan="2">'+
+                  '<div id="collapse'+index+'" class="collapse in p-3">'+
+                    '<div class="row">'+
+                      '<div class="col-5">Definition</div>'+
+                      '<div class="col-6" id="'+ validIndexes[index].index_name +'Definition">'+validIndexes[index].definition+'</div>'+
+                    '</div>'+
+                    '<div class="row" id="'+ validIndexes[index].index_name +'ElementsDiv">'+
+                      '<div class="col-5"><button id="'+ validIndexes[index].index_name +'ElementsLink" href="" onclick="modalModifyIndexElements(this)" value="'+validIndexes[index].index_name+'" class="btn btn-outline text-info p-0 indexLinks" data-toggle="modal" data-target="#modifyIndexElementsCard">Elements</button></div>'+
+                      '<div class="col-6" id="'+ validIndexes[index].index_name +'IndexElements" class="indexElements'+index+'"></div>'+ 
+                      //Here goes the scrip for the index element insertion
+                    '</div>'+
+                    '<div class="row" id="'+ validIndexes[index].index_name +'SymbolsDiv">'+
+                      '<div class="col-5"><button id="'+ validIndexes[index].index_name +'AssociatedSymbolsLink" href="" onclick="modalAssociatedSymbols(this)" value="'+validIndexes[index].symbols+'" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#associatedSymbolsCard">Associated Symbols</button></div>'+
+                      '<div class="col-6" id="'+ validIndexes[index].index_name +'Symbols" class="Symbols'+index+'"></div>'+ 
+                      //Here goes the scrip for the associated symbols insertion
+                    '</div>'+
+                  '</div>'+
+                '</td>'+
+                '<td></td>' +
+              '</tr>';
+
+
+              $(item).appendTo(".indexesValidTableBody");
+
+              //Calculate and add index elements and associated symbols
+
+
+              elementsNumber = validIndexes[index].elements.length-1;
+              span = '';
+            
+              for (elementsIndex = 0; elementsIndex < validIndexes[index].elements.length; elementsIndex++) {
+                span = span+ '<span>' + validIndexes[index].elements[elementsIndex] + '</span>';
+                if (elementsIndex != elementsNumber) {
+                  span = span + ', ';
+                }
+              }
+              document.getElementById(validIndexes[index].index_name +"IndexElements").innerHTML= span;
+              
+
+              symbolNumber = validIndexes[index].symbols.length-1;
+              span = '';
+              span = validIndexes[index].symbols.length;
+              /*for (symbolsIndex = 0; symbolsIndex < validIndexes[index].symbols.length; symbolsIndex++) {
+                span = span+ '<span>' + validIndexes[index].symbols[symbolsIndex] + '</span>';
+                if (symbolsIndex != symbolNumber) {
+                  span = span + ', ';
+                }
+              }*/
+              document.getElementById(validIndexes[index].index_name +"Symbols").innerHTML= span;
+              
+
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <div class="tab-pane fade" id="indexespendingTabContent">
+    <!-- Pending indexes over here -->
+    
+    <div class="d-flex bd-highlight">
+      <div class="ml-auto p-1 bd-highlight">
+        <ul class="pagination pagination-sm mb-1" id="currentPaginationNonValidated">
+          
+          <li class="page-item" id="firstPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#">&laquo;</a>
+          </li>
+          <li class="page-item" id="previousPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#">Previous</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationNonValidated" title="" onclick="removeFade('lesserPaginationNonValidated', false)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item active" id="activePaginationNonValidated" value=1>
+            <a class="page-link border border-secondary" href="#">1</a>
+          </li>
+
+          <li class="page-item">
+            <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationNonValidated" title="" onclick="removeFade('greaterPaginationNonValidated',false)" data-toggle="popover" data-trigger="click" data-content="">...</a>
+          </li>
+          
+          <li class="page-item" id="nextPaginationNonValidated">
+            <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+          </li>
+          <li class="page-item" id="lastPaginationNonValidated">
+            <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top" title="Last page">&raquo;</a>
+          </li>
+        </ul>
+        <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span id="pageNumberNonValidated">0</span></small>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <div class="row d-flex">
+              <th scope="col" class="w-75">Index name</th>
+              <th scope="col">Actions</th>
+            </div>
+          </tr>
+        </thead>
+        <tbody class="indexesNonValidTableBody" id="indexesNonValidTableBody">
+          
+          <script type="text/javascript">
+            var nonvalidIndexes = dataDictionary.non_validated;
+            for (index = 0; index < nonvalidIndexes.length; index++) {
+
+              item = '<tr class="accordion-toggle collapsed" id="'+ nonvalidIndexes[index].index_name +'Accordion" data-toggle="collapse" data-parent="#'+ nonvalidIndexes[index].index_name +'Accordion" href="#pendingcollapse'+index+'">'+
+                '<td class="expand-button">></td>' +
+                '<td id="'+ nonvalidIndexes[index].index_name +'">'+ nonvalidIndexes[index].index_name +'</td>' +
+                '<td><button id="modifyButton" href="" onclick="modalModify(this)" value="'+nonvalidIndexes[index].index_name+'" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyIndexCard">Modify</button>'+
+                '<button id="deleteButton" href="" onclick="modalDelete(this)" value="'+nonvalidIndexes[index].index_name+'" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteIndexCard">Delete</button>'+
+                '</td></tr>'+
+                '<tr class="hide-table-padding">'+ 
+                '<td></td>'+
+                '<td colspan="2">'+
+                  '<div id="pendingcollapse'+index+'" class="collapse in p-3">'+
+                    '<div class="row">'+
+                      '<div class="col-5">Definition</div>'+
+                      '<div class="col-6" id="'+ nonvalidIndexes[index].index_name +'Definition">'+nonvalidIndexes[index].definition+'</div>'+
+                    '</div>'+
+                    '<div class="row" id="'+ nonvalidIndexes[index].index_name +'ElementsDiv">'+
+                      '<div class="col-5"><button id="'+ nonvalidIndexes[index].index_name +'ElementsLink" href="" onclick="modalModifyIndexElements(this)" value="'+nonvalidIndexes[index].index_name+'" class="btn btn-outline text-info p-0 indexLinks" data-toggle="modal" data-target="#modifyIndexElementsCard">Elements</button></div>'+
+                      '<div class="col-6" id="'+ nonvalidIndexes[index].index_name +'IndexElements" class="indexElements'+index+'"></div>'+ 
+                      //Here goes the scrip for the index elements insertion
+                    '</div>'+
+                    '<div class="row" id="'+ nonvalidIndexes[index].index_name +'SymbolsDiv">'+
+                      '<div class="col-5"><button id="'+ nonvalidIndexes[index].index_name +'AssociatedSymbolsLink" href="" onclick="modalAssociatedSymbols(this)" value="'+nonvalidIndexes[index].symbols+'" class="btn btn-outline text-info p-0" data-toggle="modal" data-target="#associatedSymbolsCard">Associated Symbols</button></div>'+
+                      '<div class="col-6" id="'+ nonvalidIndexes[index].index_name +'Symbols" class="Symbols'+index+'"></div>'+ 
+                      //Here goes the scrip for the associated symbols insertion
+                    '</div>'+
+                    '<div class="row ml-auto pt-2 bd-highlight">'+
+                      '<button id="'+ nonvalidIndexes[index].index_name +'Validate" value="'+ nonvalidIndexes[index].index_name +'" class="btn btn-success btn-sm validateIndex" onclick="modalValidate(this)" data-toggle="modal" data-target="#validateIndexCard">Validate index</button>'+
+                    '</div>'+
+                  '</div>'+
+                '</td>'+
+              '</tr>';
+
+
+              $(item).appendTo(".indexesNonValidTableBody");
+
+              //Calculate and add indexes and secondary modules
+              
+
+
+
+              elementsNumber = nonvalidIndexes[index].elements.length-1;
+              span = '';
+            
+              for (elementsIndex = 0; elementsIndex < nonvalidIndexes[index].elements.length; elementsIndex++) {
+                span = span+ '<span>' + nonvalidIndexes[index].elements[elementsIndex] + '</span>';
+                if (elementsIndex != elementsNumber) {
+                  span = span + ', ';
+                }
+              }
+              document.getElementById(nonvalidIndexes[index].index_name +"IndexElements").innerHTML= span;
+              
+              
+              symbolNumber = nonvalidIndexes[index].symbols.length-1;
+              span = '0';
+              span = nonvalidIndexes[index].symbols.length;
+
+              document.getElementById(nonvalidIndexes[index].index_name +"Symbols").innerHTML= span;
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+
+<div class="modal fade" id="addNewIndexCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertAdd"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add new index to the dictionary</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Fill the index new information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Index Name</label>
+            <input type="text" class="form-control" placeholder="Index Name" id="inputAddIndexName">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Definition</label>
+            <textarea class="form-control" id="inputAddIndexDefinition" rows="3" placeholder="Definition"></textarea>
+          </div>
+          
+        </div>
+      </div>
+      <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="addNewIndexCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="addIndexToDictionary()">Add</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modifyIndexCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertModify"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify index from the dictionary: <strong id="previousIndexName">IndexName</strong></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Index information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Index Name</label>
+            <input type="text" class="form-control" placeholder="Index Name" id="inputModifyIndexName">
+          </div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Definition</label>
+            <textarea class="form-control" id="inputModifyIndexDefinition" rows="3" placeholder="Definition"></textarea>
+          </div>
+          
+        </div>
+      </div>
+      <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifyIndexCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifyIndexFromDictionary()">Modify</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="deleteIndexCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertDelete"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete index</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure of deleting the index information?</p>
+        <strong><p class="text-center" id="deleteIndexName">index name</p></strong>
+      </div>
+      
+      <p class="m-auto"><small>The index must not be associated to any symbol.</small></p>
+      <p class="m-auto text-warning"><small id="deleteSymbolsAssociated"></small></p>
+      
+      <p class="m-auto"><small>The following index elements will be deleted.</small></p>
+      <p class="m-auto text-danger"><small id="deleteIndexElementsAssociated"></small></p>
+      
+      <div class="modal-footer d-flex">
+        <button id="deleteIndexCardButton" type="button" class="btn btn-danger mr-auto"
+          onclick="deleteIndexFromDictionary()">Delete</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modifyIndexElementsCard" >
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertModifyIndexElements"></div>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify index elements</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Currently modifying the index: <strong id="modifyIndexElementsIndexName">index name</strong></p>
+        <hr>
+        <div class="d-flex flex-row">
+          
+          <div class="m-auto">
+            <p class="text-center mt-auto">Index Elements:</p>
+            <div id="modifyIndexElementsDiv" class="modifyIndexElementsDiv d-flex justify-content-center flex-column">
+              <!-- Here goes a select made in js -->
+      
+            </div>
+            <div class="d-flex"><button class="btn btn-sm btn-outline-info m-auto" id="modifyIndexElementsPlusButton" onclick="addTextBoxIndexElements()">+</button></div>
+          </div>
+        </div>
+      </div>
+      <p class="m-auto p-1"><small>The index must have at least an element associated to be validated.</small></p>
+      <p class="m-auto p-1"><small>Elements with whitespaces or duplicates will be ignored.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifyIndexElementsCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifyIndexElementsFromDictionary()">Save</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="validateIndexCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertValidate"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Validate index</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure of validating the index?</p>
+        <strong><p id="validateIndexName">index name</p></strong>
+      </div>
+      <p class="m-auto"><small>The index information must be well formed.</small></p>
+      <p id="validateIndexErrorText" class="m-auto text-warning"><small>The Index must have elements asociated.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="validateIndexCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="validateIndexFromDictionary(this)">Validate</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="associatedSymbolsCard" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Associated symbols:</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <div class="row d-flex">
+                <th scope="col" class="w-75">Symbol name</th>
+              </div>
+            </tr>
+          </thead>
+          <tbody id="associatedSymbolsTableBody">
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function(){
+    //popoverInitialization("funcionaporfavor");
+    popoverInitialization("lesserPaginationValidated", true);
+    popoverInitialization("greaterPaginationValidated", true);
+    popoverInitialization("lesserPaginationNonValidated", false);
+    popoverInitialization("greaterPaginationNonValidated", false);
+
+    $('body').on('click', function (e) {
+        //Hides popover and simulates click on toggle to make it work on the next click
+        if ($(e.target).data('toggle') !== 'popover'
+            && $(e.target).parents('.popover.in').length === 0) {
+              if ($("#lesserPaginationValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#lesserPaginationValidated").click(); 
+              }
+              if ($("#greaterPaginationValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#greaterPaginationValidated").click();
+              } 
+              if ($("#lesserPaginationNonValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#lesserPaginationNonValidated").click();
+              }
+              if ($("#greaterPaginationNonValidated").next('div.popover:visible').length){
+                //popover is visible
+                $("#greaterPaginationNonValidated").click();  
+              } 
+              $('[data-toggle="popover"]').popover('hide');
+              
+        }
+    });
+    $('a').on('click', function (e) {
+      $('a').not(this).popover('hide');
+    });
+
+    $(document).on('click', '.inputButtonPagination', function(e){
+      if ($("#lesserPaginationValidated").next('div.popover:visible').length || $("#greaterPaginationValidated").next('div.popover:visible').length){
+        setIndexPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, true);
+      }
+      if ($("#lesserPaginationNonValidated").next('div.popover:visible').length || $("#greaterPaginationNonValidated").next('div.popover:visible').length){
+        setIndexPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, false);
+      }
+    });
+   
+  });
+</script>
+
+
+<script>
+  //Initial tabulation
+  window.onload = setActiveNav(tabulation, show);
+  //Button permissions
+  window.onload = setIndexButtonPermissions(user.roles);
+  //Initial pagination
+  window.onload = setIndexPagination(numberOfPages, 1, true);  
+  window.onload = setIndexPagination(numberOfPages, 1, false);
+
+</script>
+{% endblock %}

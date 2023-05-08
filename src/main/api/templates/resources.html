@@ -1,0 +1,679 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript" src="{{url_for('static', filename='js/Resources.js')}}"></script>
+<script type="text/javascript">
+
+  var dataDictionary = JSON.parse('{{ dataDictionary | safe}}');
+  var acronyms_pagination = parseInt('{{ acronyms_pagination }}');
+  var adjectives_pagination = parseInt('{{ adjectives_pagination }}');
+  var rules_pagination = parseInt('{{ rules_pagination }}');
+  var searchedText = '{{ searchedText }}';
+  var numberOfPages = 4;
+</script>
+
+<!--Error alert-->
+<div id="errorAlert"></div>
+<!--Success alert-->
+<div id="successAlert"></div>
+<h1>RESOURCES</h1>
+<h2 id="searchedTextSpan"></h2>
+<script>
+  if(searchedText!=''){
+    if(searchedText.length<30){
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText;
+    }else{
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText.substring(0, 30)+'...';
+    }
+  }
+</script>
+
+<ul class="nav nav-tabs">
+  <li class="nav-item" id="acronymsTabI">
+    <a id="acronymsTab" class="nav-link active" data-toggle="tab" href="#acronymsTabContent">Acronyms</a>
+  </li>
+  <li class="nav-item" id="adjectivesTabI">
+    <a id="adjectivesTab" class="nav-link" data-toggle="tab" href="#adjectivesTabContent">Adjectives</a>
+  </li>
+  <li class="nav-item" id="semanticRulesTabI">
+    <a id="semanticRulesTab" class="nav-link" data-toggle="tab" href="#semanticRulesTabContent">Semantic Rules</a>
+  </li>
+</ul>
+
+<div id="myTabContent" class="tab-content pt-4">
+  <div class="tab-pane fade show active" id="acronymsTabContent">
+    <!-- Acronyms -->
+
+    <div class="d-flex mt-3">
+      <div class="p-1 ml-2 bd-highlight">
+        <button class="btn btn-success btn-sm addResourceButton" id="addNewAcronymButton" data-toggle="modal" data-target="#addNewAcronymCard"
+          onclick="modalAddAcronym()">Add acronym</button>
+      </div>
+
+      <div class="ml-auto p-1 d-flex bd-highlight">
+        <div class="bd-highlight">
+          <ul class="pagination pagination-sm mb-1" id="currentPaginationAcronyms">
+
+            <li class="page-item" id="firstPaginationAcronyms">
+              <a class="page-link border border-secondary" href="#">&laquo;</a>
+            </li>
+            <li class="page-item" id="previousPaginationAcronyms">
+              <a class="page-link border border-secondary" href="#">Previous</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationAcronyms" title=""
+                onclick="removeFade('lesserPaginationAcronyms', 'Acronyms')" data-toggle="popover" data-trigger="click"
+                data-content="">...</a>
+            </li>
+
+            <li class="page-item active" id="activePaginationAcronyms" value=1>
+              <a class="page-link border border-secondary" href="#">1</a>
+            </li>
+
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationAcronyms"
+                title="" onclick="removeFade('greaterPaginationAcronyms', 'Acronyms')" data-toggle="popover"
+                data-trigger="click" data-content="">...</a>
+            </li>
+
+            <li class="page-item" id="nextPaginationAcronyms">
+              <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+            </li>
+            <li class="page-item" id="lastPaginationAcronyms">
+              <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top"
+                title="Last page">&raquo;</a>
+            </li>
+          </ul>
+          <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span
+                id="pageNumberAcronyms">0</span></small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-responsive" id="acronymsTable">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <div class="row d-flex">
+              <th scope="col" class="w-25">Letters</th>
+              <th scope="col" class="w-50">Meaning</th>
+              <th scope="col" class="w-25">Actions</th>
+            </div>
+          </tr>
+        </thead>
+        <tbody class="acronymsTableBody" id="acronymsTableBody">
+
+          <script type="text/javascript">
+            var acronyms = dataDictionary.acronyms;
+            for (index = 0; index < acronyms.length; index++) {
+
+              item = '<tr id="' + acronyms[index].letters + 'Accordion" data-toggle="collapse" data-parent="#' + acronyms[index].letters + 'Accordion">' +
+                '<td></td>' +
+                '<td id="' + acronyms[index].letters + '">' + acronyms[index].letters + '</td>' +
+                '<td id="' + acronyms[index].letters + 'Meaning">' + acronyms[index].meaning + '</td>' +
+                '<td><button id="modifyButton" href="" onclick="modalModifyAcronym(this)" value="' + acronyms[index].letters + '" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyAcronymCard">Modify</button>' +
+                '<button id="deleteButton" href="" onclick="modalDeleteAcronym(this)" value="' + acronyms[index].letters + '" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteAcronymCard">Delete</button>' +
+                '</td></tr>';
+
+
+                $(item).appendTo(".acronymsTableBody");
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="adjectivesTabContent">
+    <!-- Adjectives -->
+
+    <div class="d-flex mt-3">
+      <div class="ml-2 p-1 bd-highlight">
+        <button class="btn btn-success btn-sm addResourceButton" id="addNewAdjectiveButton" data-toggle="modal"
+          data-target="#addNewAdjectiveCard" onclick="modalAddAdjective()">Add adjective</button>
+      </div>
+
+      <div class="ml-auto p-1 d-flex bd-highlight">
+        <div class="bd-highlight">
+          <ul class="pagination pagination-sm mb-1" id="currentPaginationAdjectives">
+
+            <li class="page-item" id="firstPaginationAdjectives">
+              <a class="page-link border border-secondary" href="#">&laquo;</a>
+            </li>
+            <li class="page-item" id="previousPaginationAdjectives">
+              <a class="page-link border border-secondary" href="#">Previous</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationAdjectives" title=""
+                onclick="removeFade('lesserPaginationAdjectives', 'Adjectives')" data-toggle="popover" data-trigger="click"
+                data-content="">...</a>
+            </li>
+
+            <li class="page-item active" id="activePaginationAdjectives" value=1>
+              <a class="page-link border border-secondary" href="#">1</a>
+            </li>
+
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationAdjectives"
+                title="" onclick="removeFade('greaterPaginationAdjectives', 'Adjectives')" data-toggle="popover"
+                data-trigger="click" data-content="">...</a>
+            </li>
+
+            <li class="page-item" id="nextPaginationAdjectives">
+              <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+            </li>
+            <li class="page-item" id="lastPaginationAdjectives">
+              <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top"
+                title="Last page">&raquo;</a>
+            </li>
+          </ul>
+          <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span
+                id="pageNumberAdjectives">0</span></small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-responsive" id="adjectivesTable">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <div class="row d-flex">
+              <th scope="col" class="w-25">Adjective</th>
+              <th scope="col" class="w-50">Usages</th>
+              <th scope="col" class="w-25">Actions</th>
+            </div>
+          </tr>
+        </thead>
+        <tbody class="adjectivesTableBody" id="adjectivesTableBody">
+
+          <script type="text/javascript">
+            var adjectives = dataDictionary.adjectives;
+            for (index = 0; index < adjectives.length; index++) {
+
+              item = '<tr id="' + adjectives[index].adjective + 'Accordion" data-toggle="collapse" data-parent="#' + adjectives[index].adjective + 'Accordion">' +
+                '<td></td>' +
+                '<td id="' + adjectives[index].adjective + '">' + adjectives[index].adjective + '</td>' +
+                '<td id="' + adjectives[index].adjective + 'Usages">' + adjectives[index].usages + '</td>' +
+                '<td><button id="modifyButton" href="" onclick="modalModifyAdjective(this)" value="' + adjectives[index].adjective + '" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyAdjectiveCard">Modify</button>' +
+                '<button id="deleteButton" href="" onclick="modalDeleteAdjective(this)" value="' + adjectives[index].adjective + '" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteAdjectiveCard">Delete</button>' +
+                '</td></tr>';
+
+
+                $(item).appendTo(".adjectivesTableBody");
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="tab-pane fade" id="semanticRulesTabContent">
+    <!-- Semantic Rules -->
+
+    <div class="d-flex mt-3">
+      <div class="ml-2 p-1 bd-highlight">
+        <button class="btn btn-success btn-sm addResourceButton" id="addNewSemanticRuleButton" data-toggle="modal"
+          data-target="#addNewSemanticRuleCard" onclick="modalAddSemanticRule()">Add semantic rule</button>
+      </div>
+
+      <div class="ml-auto p-1 d-flex bd-highlight">
+        <div class="bd-highlight">
+          <ul class="pagination pagination-sm mb-1" id="currentPaginationSemanticRules">
+
+            <li class="page-item" id="firstPaginationSemanticRules">
+              <a class="page-link border border-secondary" href="#">&laquo;</a>
+            </li>
+            <li class="page-item" id="previousPaginationSemanticRules">
+              <a class="page-link border border-secondary" href="#">Previous</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationSemanticRules" title=""
+                onclick="removeFade('lesserPaginationSemanticRules', 'SemanticRules')" data-toggle="popover" data-trigger="click"
+                data-content="">...</a>
+            </li>
+
+            <li class="page-item active" id="activePaginationSemanticRules" value=1>
+              <a class="page-link border border-secondary" href="#">1</a>
+            </li>
+
+            <li class="page-item">
+              <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationSemanticRules"
+                title="" onclick="removeFade('greaterPaginationSemanticRules', 'SemanticRules')" data-toggle="popover"
+                data-trigger="click" data-content="">...</a>
+            </li>
+
+            <li class="page-item" id="nextPaginationSemanticRules">
+              <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+            </li>
+            <li class="page-item" id="lastPaginationSemanticRules">
+              <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top"
+                title="Last page">&raquo;</a>
+            </li>
+          </ul>
+          <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span
+                id="pageNumberSemanticRules">0</span></small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="table-responsive" id="semanticRulesTable">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <div class="row d-flex">
+              <th scope="col" class="w-25">Rule</th>
+              <th scope="col" class="w-50">Explanation</th>
+              <th scope="col" class="w-25">Actions</th>
+            </div>
+          </tr>
+        </thead>
+        <tbody class="semanticRulesTableBody" id="semanticRulesTableBody">
+
+          <script type="text/javascript">
+            var semanticRules = dataDictionary.semantic_rules;
+            for (index = 0; index < semanticRules.length; index++) {
+
+              item = '<tr id="' + semanticRules[index].ruleforShort + 'Accordion" data-toggle="collapse" data-parent="#' + semanticRules[index].ruleforShort + 'Accordion">' +
+                '<td></td>' +
+                '<td id="' + semanticRules[index].ruleforShort + '">' + semanticRules[index].ruleforShort + '</td>' +
+                '<td id="' + semanticRules[index].ruleforShort + 'Explanation">' + semanticRules[index].explanation + '</td>' +
+                '<td><button id="modifyButton" href="" onclick="modalModifySemanticRule(this)" value="' + semanticRules[index].ruleforShort + '" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifySemanticRuleCard">Modify</button>' +
+                '<button id="deleteButton" href="" onclick="modalDeleteSemanticRule(this)" value="' + semanticRules[index].ruleforShort + '" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteSemanticRuleCard">Delete</button>' +
+                '</td></tr>';
+
+
+                $(item).appendTo(".semanticRulesTableBody");
+
+            }
+          </script>
+
+        </tbody>
+      </table>
+    </div>
+</div>
+
+
+
+
+
+  <div class="modal fade ModalCard" id="addNewAcronymCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertAddAcronym"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add new acronym to the dictionary</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Fill the acronym's new information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Letters</label>
+              <input type="text" class="form-control" placeholder="Letters" id="inputAddAcronymLetters">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Meaning</label>
+              <textarea class="form-control" id="inputAddAcronymMeaning" rows="3" placeholder="Meaning"></textarea>
+            </div>
+
+          </div>
+        </div>
+        <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="addNewAcronymCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="addAcronymToDictionary()">Add</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade ModalCard" id="addNewAdjectiveCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertAddAdjective"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add new adjective to the dictionary</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Fill the adjective's new information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Adjective</label>
+              <input type="text" class="form-control" placeholder="Adjective" id="inputAddAdjective">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Usages</label>
+              <textarea class="form-control" id="inputAddAdjectiveUsages" rows="3" placeholder="Usages"></textarea>
+            </div>
+
+          </div>
+        </div>
+        <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="addNewAdjectiveCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="addAdjectiveToDictionary()">Add</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade ModalCard" id="addNewSemanticRuleCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertAddSemanticRule"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add new semantic rule to the dictionary</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Fill the semantic rule's new information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Rule</label>
+              <input type="text" class="form-control" placeholder="Rule" id="inputAddRule">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Explanation</label>
+              <textarea class="form-control" id="inputAddSemanticRuleExplanation" rows="3" placeholder="Explanation"></textarea>
+            </div>
+          </div>
+        </div>
+        <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="addNewSemanticRuleCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="addSemanticRuleToDictionary()">Add</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade ModalCard" id="modifyAcronymCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertModifyAcronym"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify acronym from the dictionary: <strong id="previousLetters">Letters</strong>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Acronym information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Letters</label>
+              <input type="text" class="form-control" placeholder="Letters" id="inputModifyLetters">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Meaning</label>
+              <textarea class="form-control" id="inputModifyMeaning" rows="3"
+                placeholder="Meaning"></textarea>
+            </div>
+
+          </div>
+        </div>
+        <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="modifyAcronymCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="modifyAcronymFromDictionary()">Modify</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade ModalCard" id="modifyAdjectiveCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertModifyAdjective"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify adjective from the dictionary: <strong id="previousAdjective">Adjective</strong>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Adjective information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Adjective</label>
+              <input type="text" class="form-control" placeholder="Adjective" id="inputModifyAdjective">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Usages</label>
+              <textarea class="form-control" id="inputModifyUsages" rows="3"
+                placeholder="Usages"></textarea>
+            </div>
+          </div>
+        </div>
+        <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="modifyAdjectiveCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="modifyAdjectiveFromDictionary()">Modify</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade ModalCard" id="modifySemanticRuleCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertModifySemanticRule"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify semantic rule from the dictionary: <strong id="previousRule">Rule</strong>
+          </h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text-center">Semantic rule information below:</p>
+          <div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Rule</label>
+              <input type="text" class="form-control" placeholder="Rule" id="inputModifyRule">
+            </div>
+            <div class="form-group">
+              <label class="col-form-label" for="inputDefault">Explanation</label>
+              <textarea class="form-control" id="inputModifyExplanation" rows="3"
+                placeholder="Explanation"></textarea>
+            </div>
+          </div>
+        </div>
+        <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+        <div class="modal-footer d-flex">
+          <button id="modifySemanticRuleCardButton" type="button" class="btn btn-success mr-auto"
+            onclick="modifySemanticRuleFromDictionary()">Modify</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade ModalCard" id="deleteAcronymCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertDeleteAcronym"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete acronym</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure of deleting the acronym information?</p>
+          <strong>
+            <p class="text-center" id="deleteAcronym">Letters</p>
+          </strong>
+        </div>
+        <div class="modal-footer d-flex">
+          <button id="deleteAcronymCardButton" type="button" class="btn btn-danger mr-auto"
+            onclick="deleteAcronymFromDictionary()">Delete</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade ModalCard" id="deleteAdjectiveCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertDeleteAdjective"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete adjective</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure of deleting the adjective information?</p>
+          <strong>
+            <p class="text-center" id="deleteAdjective">Adjective</p>
+          </strong>
+        </div>
+        <div class="modal-footer d-flex">
+          <button id="deleteAdjectiveCardButton" type="button" class="btn btn-danger mr-auto"
+            onclick="deleteAdjectiveFromDictionary()">Delete</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade ModalCard" id="deleteSemanticRuleCard">
+    <!--Warning alert-->
+    <div class="text-center" id="warningAlertDeleteSemanticRule"></div>
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Delete semantic rule</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure of deleting the semantic rule information?</p>
+          <strong>
+            <p class="text-center" id="deleteRule">Rule</p>
+          </strong>
+        </div>
+        <div class="modal-footer d-flex">
+          <button id="deleteSemanticRuleCardButton" type="button" class="btn btn-danger mr-auto"
+            onclick="deleteSemanticRuleFromDictionary()">Delete</button>
+          <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    $(document).ready(function () {
+      //popoverInitialization("funcionaporfavor");
+      popoverInitialization("lesserPaginationAcronyms", "Acronyms");
+      popoverInitialization("greaterPaginationAcronyms", "Acronyms");
+      popoverInitialization("lesserPaginationAdjectives", "Adjectives");
+      popoverInitialization("greaterPaginationAdjectives", "Adjectives");
+      popoverInitialization("lesserPaginationSemanticRules", "SemanticRules");
+      popoverInitialization("greaterPaginationSemanticRules", "SemanticRules");
+
+      $('body').on('click', function (e) {
+        //Hides popover and simulates click on toggle to make it work on the next click
+        if ($(e.target).data('toggle') !== 'popover'
+          && $(e.target).parents('.popover.in').length === 0) {
+          if ($("#lesserPaginationAcronyms").next('div.popover:visible').length) {
+            //popover is visible
+            $("#lesserPaginationAcronyms").click();
+          }
+          if ($("#greaterPaginationAcronyms").next('div.popover:visible').length) {
+            //popover is visible
+            $("#greaterPaginationAcronyms").click();
+          }
+          if ($("#lesserPaginationAdjectives").next('div.popover:visible').length) {
+            //popover is visible
+            $("#lesserPaginationAdjectives").click();
+          }
+          if ($("#greaterPaginationAdjectives").next('div.popover:visible').length) {
+            //popover is visible
+            $("#greaterPaginationAdjectives").click();
+          }
+          if ($("#lesserPaginationSemanticRules").next('div.popover:visible').length) {
+            //popover is visible
+            $("#lesserPaginationSemanticRules").click();
+          }
+          if ($("#greaterPaginationSemanticRules").next('div.popover:visible').length) {
+            //popover is visible
+            $("#greaterPaginationSemanticRules").click();
+          }
+          $('[data-toggle="popover"]').popover('hide');
+
+        }
+      });
+      $('a').on('click', function (e) {
+        $('a').not(this).popover('hide');
+      });
+
+      $(document).on('click', '.inputButtonPagination', function (e) {
+        if ($("#lesserPaginationAcronyms").next('div.popover:visible').length || $("#greaterPaginationAcronyms").next('div.popover:visible').length) {
+          setResourcesPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, "Acronyms");
+        }
+        if ($("#lesserPaginationAdjectives").next('div.popover:visible').length || $("#greaterPaginationAdjectives").next('div.popover:visible').length) {
+          setResourcesPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, "Adjectives");
+        }
+        if ($("#lesserPaginationSemanticRules").next('div.popover:visible').length || $("#greaterPaginationSemanticRules").next('div.popover:visible').length) {
+          setResourcesPagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, "SemanticRules");
+        }
+      });
+
+    });
+  </script>
+
+
+  <script>
+    //Initial tabulation
+    window.onload = setActiveNav(tabulation, show);
+    //Button permissions
+    window.onload = setResourcesButtonPermissions(user.roles);
+    //Initial pagination
+    window.onload = setResourcesPagination(numberOfPages, 1, "Acronyms");  
+    window.onload = setResourcesPagination(numberOfPages, 1, "Adjectives");
+    window.onload = setResourcesPagination(numberOfPages, 1, "SemanticRules");
+  </script>
+  {% endblock %}

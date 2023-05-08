@@ -1,0 +1,10 @@
+With funding from the EU’s Horizon 2020 programme, the ‘Low-carbon society: an enhanced modelling tool for the transition to sustainability’ (LOCOMOTION) aims to design a new set of IAMs (Integrated Assessment Models) to provide policymakers and relevant stakeholders with a reliable and practical modelling system to assess the feasibility, effectiveness, costs and ramifications of different sustainability policy options. By doing so, LOCOMOTION will help them to identify the most effective transition pathways towards a low-carbon society.
+
+
+Building on existing IAMs developed by the EU-funded MEDEAS project, and including knowledge from other relevant models (World6, TIMES, LEAP, GCAM, C-Roads, etc.), a number of substantive improvements are planned with respect to the state-of-the-art in energy-economy-environment modelling.
+
+
+Drawing on research teams from different European countries, the improved IAMs will be the product of interdisciplinary work in data management, policy and scenario assessment, as well as the system dynamic modelling of relevant environmental, economic, social, technological and biophysical variables.
+
+
+These new IAMs will be robust, usable and transparent diagnostic and scenario assessment tools to help pave the way to a sustainable transition towards a low-carbon society. LOCOMOTION will provide the different stakeholders with a more effective, user-friendly and open-source modelling system for decision support, education and social awareness.

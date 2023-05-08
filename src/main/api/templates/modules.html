@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<script type="text/javascript" src="{{url_for('static', filename='js/Modules.js')}}"></script>
+<script type="text/javascript">
+
+  var dataDictionary = JSON.parse('{{ dataDictionary | safe}}');
+  var paginationValidated = parseInt('{{ validated_pagination }}');
+  var searchedText = '{{ searchedText }}';
+  var numberOfPages = 4;
+</script>
+
+<!--Error alert-->
+<div id="errorAlert"></div>
+<!--Success alert-->
+<div id="successAlert"></div>
+
+<h1>MODULES</h1>
+<h2 id="searchedTextSpan"></h2>
+<script>
+  if(searchedText!=''){
+    if(searchedText.length<30){
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText;
+    }else{
+      document.getElementById("searchedTextSpan").innerText="Searched: "+searchedText.substring(0, 30)+'...';
+    }
+  }
+</script>
+<div class="d-flex mt-3">
+  <div class="p-1 bd-highlight">
+    <button class="btn btn-success p-1 btn-sm ml-3" id="addNewModuleButton" data-toggle="modal" data-target="#addNewModuleCard"
+      onclick="modalAdd()">Add module</button>
+  </div>
+
+  <div class="ml-auto p-1 d-flex bd-highlight">
+    <div class="bd-highlight">
+      <ul class="pagination pagination-sm mb-1" id="currentPaginationValidated">
+  
+        <li class="page-item" id="firstPaginationValidated">
+          <a class="page-link border border-secondary" href="#">&laquo;</a>
+        </li>
+        <li class="page-item" id="previousPaginationValidated">
+          <a class="page-link border border-secondary" href="#">Previous</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link border border-secondary" href="#" tabindex="0" id="lesserPaginationValidated" title=""
+            onclick="removeFade('lesserPaginationValidated', true)" data-toggle="popover" data-trigger="click"
+            data-content="">...</a>
+        </li>
+  
+        <li class="page-item active" id="activePaginationValidated" value=1>
+          <a class="page-link border border-secondary" href="#">1</a>
+        </li>
+  
+        <li class="page-item">
+          <a class="page-link border border-secondary" href="#" tabindex="0" id="greaterPaginationValidated" title=""
+            onclick="removeFade('greaterPaginationValidated', true)" data-toggle="popover" data-trigger="click"
+            data-content="">...</a>
+        </li>
+  
+        <li class="page-item" id="nextPaginationValidated">
+          <a class="page-link pl-3 pr-3 border border-secondary" href="#">Next</a>
+        </li>
+        <li class="page-item" id="lastPaginationValidated">
+          <a class="page-link border border-secondary" href="#" data-toggle="tooltip" data-placement="top"
+            title="Last page">&raquo;</a>
+        </li>
+      </ul>
+      <div class="ml-auto text-sm-right font-italic"><small>Total pages: <span id="pageNumberValidated">0</span></small>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+<div class="table-responsive" id="modulesTable">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col" class="">#</th>    
+        <th scope="col" class="w-50">Module name</th>
+        <th scope="col" class="w-25">Symbols</th>
+        <th scope="col" class="w-25">Actions</th>
+        
+      </tr>
+    </thead>
+    <tbody class="modulesTableBody" id="modulesTableBody">
+      <script type="text/javascript">
+        var modules = dataDictionary;
+        for (index = 0; index < modules.length; index++) {
+
+          item = '<tr id="' + modules[index].module_name + 'Accordion" data-toggle="collapse" data-parent="#' + modules[index].module_name + 'Accordion">' +
+            '<td></td>' +
+            '<td id="' + modules[index].module_name + '">' + modules[index].module_name + '</td>' +
+            '<td id="' + modules[index].module_name + 'Symbols">' + modules[index].symbols + '</td>' +
+            '<td><button id="modifyButton" href="" onclick="modalModify(this)" value="' + modules[index].module_name + '" class="mr-1 btn btn-primary btn-sm modifyDelete" data-toggle="modal" data-target="#modifyModuleCard">Modify</button>' +
+            '<button id="deleteButton" href="" onclick="modalDelete(this)" value="' + modules[index].module_name + '" class="btn btn-danger btn-sm modifyDelete" data-toggle="modal" data-target="#deleteModuleCard">Delete</button>' +
+            '</td></tr>';
+            
+
+          $(item).appendTo(".modulesTableBody");
+        }
+      </script>
+
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+<div class="modal fade" id="addNewModuleCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertAdd"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add new module to the dictionary</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Fill the module new information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Module Name</label>
+            <input type="text" class="form-control" placeholder="Module Name" id="inputAddModuleName">
+          </div>
+        </div>
+      </div>
+      <p class="m-auto"><small>You have to fill all the information above to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="addNewModuleCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="addModuleToDictionary()">Add</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="modifyModuleCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertModify"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modify module from the dictionary: <strong id="previousModuleName">ModuleName</strong></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-center">Module information below:</p>
+        <div>
+          <div class="form-group">
+            <label class="col-form-label" for="inputDefault">Module Name</label>
+            <input type="text" class="form-control" placeholder="Module Name" id="inputModifyModuleName">
+          </div>
+        </div>
+      </div>
+      <p class="m-auto"><small>All the information above has to be filled to succeed.</small></p>
+      <div class="modal-footer d-flex">
+        <button id="modifyModuleCardButton" type="button" class="btn btn-success mr-auto"
+          onclick="modifyModuleFromDictionary()">Modify</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="deleteModuleCard">
+  <!--Warning alert-->
+  <div class="text-center" id="warningAlertDelete"></div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Delete module</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure of deleting the module information?</p>
+        <strong>
+          <p class="text-center" id="deleteModuleName">Module name</p>
+        </strong>
+      </div>
+
+      <p class="m-auto"><small>The module must not be associated to any symbol.</small></p>
+      <p class="m-auto text-warning"><small>Associated symbols: </small><small id="deleteModuleSymbolsAssociated"></small></p>
+
+      <div class="modal-footer d-flex">
+        <button id="deleteModuleCardButton" type="button" class="btn btn-danger mr-auto"
+          onclick="deleteModuleFromDictionary()">Delete</button>
+        <button type="button" class="btn btn-secondary ml-auto" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  $(document).ready(function () {
+    //popoverInitialization("funcionaporfavor");
+    popoverInitialization("lesserPaginationValidated", true);
+    popoverInitialization("greaterPaginationValidated", true);
+
+    $('body').on('click', function (e) {
+      //Hides popover and simulates click on toggle to make it work on the next click
+      if ($(e.target).data('toggle') !== 'popover'
+        && $(e.target).parents('.popover.in').length === 0) {
+        if ($("#lesserPaginationValidated").next('div.popover:visible').length) {
+          //popover is visible
+          $("#lesserPaginationValidated").click();
+        }
+        if ($("#greaterPaginationValidated").next('div.popover:visible').length) {
+          //popover is visible
+          $("#greaterPaginationValidated").click();
+        }
+        $('[data-toggle="popover"]').popover('hide');
+
+      }
+    });
+    $('a').on('click', function (e) {
+      $('a').not(this).popover('hide');
+    });
+
+    $(document).on('click', '.inputButtonPagination', function (e) {
+      if ($("#lesserPaginationValidated").next('div.popover:visible').length || $("#greaterPaginationValidated").next('div.popover:visible').length) {
+        setModulePagination(numberOfPages, document.getElementsByClassName('inputTextPagination')[0].value, true);
+      }
+    });
+
+  });
+</script>
+
+
+<script>
+  //Initial tabulation
+  window.onload = setActiveNav(tabulation, show);
+  //Button permissions
+  window.onload = setModuleButtonPermissions(user.roles);
+  //Initial pagination
+  window.onload = setModulePagination(numberOfPages, 1, true);
+</script>
+
+
+{% endblock %}

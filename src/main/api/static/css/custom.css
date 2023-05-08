@@ -1,0 +1,40 @@
+.bg {
+  /* The image used */
+  background-image: url(./background-example.jpg);
+  
+  /* Full height */
+  min-height: 100%;
+  
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: repeat;
+  background-size: cover;
+}
+body, html {
+    min-height: 100%;
+}
+
+/*Bug bootstrap cards set padding*/
+body { padding-right: 0 !important }
+
+tr.hide-table-padding td {
+  padding: 0;
+}
+
+  
+.expand-button{
+  position: relative;
+}
+  
+/*.accordion-toggle .expand-button:after{
+  content: '#';
+}
+.accordion-toggle.collapsed .expand-button:after{
+  content: '-';
+}*/
+
+
+
+.popover{
+  max-width: 14%;
+}

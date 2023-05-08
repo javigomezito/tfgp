@@ -1,0 +1,96 @@
+version: '3.4'
+
+services:
+  api:
+    image: nameko/api
+    container_name: nameko.api
+    hostname: api
+    ports:
+    - "8080:8080"
+    restart: always
+    links:
+    - rabbit
+    - db
+    - users.worker
+    environment:
+    - ENV=1
+    - FLASK_APP=app.py
+    - FLASK_DEBUG=1
+    build:
+      context: ./main/api
+      dockerfile: .docker/Dockerfile-api
+    volumes:
+    - ./main/api:/usr/src/app:ro
+    command: flask run --host=0.0.0.0 --port 8080
+    #volumes:
+    #- ./api:/usr/src/app:ro
+
+
+  users.worker:
+    container_name: users.worker
+    image: nameko/users.worker
+    restart: always
+    build:
+      context:  ./main/workers/users_worker/ #./main
+      dockerfile: .docker/Dockerfile-worker #./workers/users_worker/
+    command: /bin/bash ./run.sh #/workers/users_worker
+
+  symbols.worker:
+    container_name: symbols.worker
+    image: nameko/symbols.worker
+    restart: always
+    build:
+      context:  ./main/workers/symbols_worker/
+      dockerfile: .docker/Dockerfile-worker 
+    command: /bin/bash ./run.sh
+  
+  resources.worker:
+    container_name: resources.worker
+    image: nameko/resources.worker
+    restart: always
+    build:
+      context:  ./main/workers/resources_worker/
+      dockerfile: .docker/Dockerfile-worker 
+    command: /bin/bash ./run.sh
+  
+
+  rabbit:
+    container_name: nameko.rabbit
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+    - "15672:15672"
+    - "5672:5672"
+    environment:
+      RABBITMQ_ERLANG_COOKIE:
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+
+  db:
+    container_name: mysql
+    restart: always
+    build:
+      context: ./main/db
+      dockerfile: .docker/Dockerfile-mysql
+    environment:
+      MYSQL_DATABASE: 'Loco'
+          # So you don't have to use root, but you can if you like
+          #MYSQL_USER: 'user'
+          # You can use whatever password you like
+          #MYSQL_PASSWORD: 'password'
+          # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+          # <Port exposed> : < MySQL Port running inside container>
+          - '3306:3306'
+    expose:
+          # Opens port 3306 on the container
+      - '3306'
+          # Where our data will be persisted
+    volumes:
+      - ./main/db-data:/var/lib/mysql/
+    
+volumes:
+  db-data:
+    
